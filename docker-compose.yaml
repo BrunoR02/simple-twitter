@@ -1,0 +1,13 @@
+services:
+  mysql:
+    image: mysql:8.0.33
+    container_name: simple_twitter_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+    volumes:
+      - twitter_data:/var/lib/mysql
+
+volumes:
+  twitter_data:
