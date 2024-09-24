@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 public class UserPatchRequestDto {
 
@@ -15,6 +17,6 @@ public class UserPatchRequestDto {
   private String displayName;
 
   @JsonProperty(value = "birth_date")
-  private String birthDate;
+  private LocalDate birthDate;
 
 }

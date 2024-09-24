@@ -1,6 +1,5 @@
 package com.project.simple.twitter.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -67,19 +66,19 @@ public class UserService {
     User foundUser = findByEmail(request.getEmail());
 
     if (!foundUser.isRegistered())
-      return new GenericResponseDto("User not registered");
+      return new GenericResponseDto("User has not confirmed his account yet");
 
     if (request.getDisplayName() != null)
       foundUser.setDisplayName(request.getDisplayName());
 
     if (request.getBirthDate() != null)
-      foundUser.setBirthDate(LocalDate.parse(request.getBirthDate()));
+      foundUser.setBirthDate(request.getBirthDate());
 
     foundUser.setUpdatedAt(LocalDateTime.now());
 
     userRepository.save(foundUser);
 
-    return new GenericResponseDto("User was confirmed successfully");
+    return new GenericResponseDto("User was updated successfully");
   }
 
 }
