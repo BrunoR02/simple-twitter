@@ -1,6 +1,8 @@
 package com.project.simple.twitter.service;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +15,7 @@ import com.project.simple.twitter.dto.request.ConfirmUserPatchRequestDto;
 import com.project.simple.twitter.dto.request.UserPatchRequestDto;
 import com.project.simple.twitter.dto.request.UserPostRequestDto;
 import com.project.simple.twitter.dto.response.GenericResponseDto;
+import com.project.simple.twitter.dto.response.UserGetResponseDto;
 import com.project.simple.twitter.enums.UserStatus;
 import com.project.simple.twitter.exception.NotFoundException;
 import com.project.simple.twitter.repository.UserRepository;
@@ -79,6 +82,24 @@ public class UserService {
     userRepository.save(foundUser);
 
     return new GenericResponseDto("User was updated successfully");
+  }
+
+  public UserGetResponseDto getSingleUser(String email) {
+    User foundUser = findByEmail(email);
+
+    int age = 0;
+    if (foundUser.getBirthDate() != null) {
+      Period agePeriod = Period.between(foundUser.getBirthDate(), LocalDate.now());
+      age = agePeriod.getYears();
+    }
+
+    return UserGetResponseDto.builder()
+        .displayName(foundUser.getDisplayName())
+        .age(age)
+        .createDate(foundUser.getCreatedAt().toLocalDate())
+        .username(foundUser.getUsername())
+        .accountStatus(foundUser.getStatus().getDisplayValue())
+        .build();
   }
 
 }
