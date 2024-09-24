@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.project.simple.twitter.exception.BadRequestException;
 import com.project.simple.twitter.exception.ExceptionDetails;
+import com.project.simple.twitter.exception.GenericRequestException;
+import com.project.simple.twitter.exception.InvalidCredentialsExceptions;
 import com.project.simple.twitter.exception.NotFoundException;
 
 @ControllerAdvice
@@ -22,15 +25,19 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
   @ExceptionHandler(NotFoundException.class)
   public ResponseEntity<ExceptionDetails> handleNotFoundException(NotFoundException ex) {
 
-    ExceptionDetails exceptionDetails = ExceptionDetails.builder()
-        .title("Not Found Exception. Check Documentation")
-        .status(ex.getStatusCode().value())
-        .timestamp(LocalDateTime.now())
-        .details(ex.getMessage())
-        .developerMessage(ex.getClass().getName())
-        .build();
+    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
+  }
 
-    return new ResponseEntity<>(exceptionDetails,ex.getStatusCode());
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<ExceptionDetails> handleBadRequestException(BadRequestException ex) {
+
+    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
+  }
+
+  @ExceptionHandler(InvalidCredentialsExceptions.class)
+  public ResponseEntity<ExceptionDetails> handleInvalidCredentialsExceptions(InvalidCredentialsExceptions ex) {
+
+    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
   }
 
   @Override
@@ -66,6 +73,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         .build();
 
     return new ResponseEntity<>(exceptionDetails, status);
+  }
+
+  private <TException extends GenericRequestException> ExceptionDetails getExceptionDetails(TException ex) {
+    return ExceptionDetails.builder()
+        .title(ex.getTitle())
+        .status(ex.getStatusCode().value())
+        .timestamp(LocalDateTime.now())
+        .details(ex.getMessage())
+        .developerMessage(ex.getClass().getName())
+        .build();
   }
 
 }

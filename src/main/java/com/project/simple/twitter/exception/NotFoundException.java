@@ -7,13 +7,15 @@ import lombok.Getter;
 
 @Getter
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class NotFoundException extends RuntimeException{
-  
-  public NotFoundException(String message){
+public class NotFoundException extends RuntimeException implements GenericRequestException {
+
+  private final String title = "Not Found Exception. Check Documentation";
+
+  public NotFoundException(String message) {
     super(message);
   }
 
-  public HttpStatus getStatusCode(){
+  public HttpStatus getStatusCode() {
     return HttpStatus.NOT_FOUND;
   }
 }

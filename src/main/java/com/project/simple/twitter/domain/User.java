@@ -72,5 +72,9 @@ public class User {
   public boolean isRegistered(){
     return status != UserStatus.UNREGISTERED;
   }
+
+  public boolean isBlocked(){
+    return status == UserStatus.BLOCKED;
+  }
   
 }
