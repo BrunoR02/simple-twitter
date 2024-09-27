@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -16,8 +17,6 @@ public class JwtTokenService {
 
   private static final String ISSUER = "simple_twitter";
 
-  private static final Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
-
   public <TUser extends UserDetails> String generateToken(TUser userDetails) {
 
     return JWT.create()
@@ -25,15 +24,19 @@ public class JwtTokenService {
         .withIssuer(ISSUER)
         .withIssuedAt(Instant.now())
         .withExpiresAt(getDefaultExpirationDate())
-        .sign(algorithm);
+        .sign(getAlgorithm());
   }
 
-  public String getTokenSubject(String token) {
-    return JWT.require(algorithm)
-        .withIssuer(ISSUER)
-        .build()
-        .verify(SECRET_KEY)
-        .getSubject();
+  private Algorithm getAlgorithm(){
+    return Algorithm.HMAC256(SECRET_KEY);
+  }
+
+  public String getTokenSubject(String token) throws JWTVerificationException {
+    return JWT.require(getAlgorithm())
+      .withIssuer(ISSUER)
+      .build()
+      .verify(token)
+      .getSubject();
   }
 
   public Instant getDefaultExpirationDate(){

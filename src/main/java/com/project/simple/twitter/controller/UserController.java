@@ -2,12 +2,14 @@ package com.project.simple.twitter.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.simple.twitter.dto.request.ConfirmUserPatchRequestDto;
@@ -43,21 +45,24 @@ public class UserController {
     return new ResponseEntity<>(userService.confirm(request), HttpStatus.ACCEPTED);
   }
 
+  @PreAuthorize("hasAuthority('USER')")
   @PatchMapping
-  public ResponseEntity<GenericResponseDto> updateUser(@RequestBody @Valid UserPatchRequestDto request) {
+  public ResponseEntity<GenericResponseDto> updateUser(@RequestBody @Valid UserPatchRequestDto request,
+      @AuthenticationPrincipal UserDetails userDetails) {
 
-    return new ResponseEntity<>(userService.update(request), HttpStatus.ACCEPTED);
+    return new ResponseEntity<>(userService.update(request, userDetails), HttpStatus.ACCEPTED);
   }
 
-  @GetMapping
-  public ResponseEntity<UserGetResponseDto> getUser(@RequestParam(name = "email",required = true) String email) {
+  @PreAuthorize("hasAuthority('USER')")
+  @GetMapping("/info")
+  public ResponseEntity<UserGetResponseDto> getUser(@AuthenticationPrincipal UserDetails userDetails) {
 
-    return new ResponseEntity<>(userService.getSingleUser(email), HttpStatus.OK);
+    return new ResponseEntity<>(userService.getUserInfo(userDetails), HttpStatus.OK);
   }
 
   @PostMapping("/login")
-  public ResponseEntity<LoginUserPostResponseDto> loginUser(@RequestBody @Valid LoginUserPostRequestDto request){
+  public ResponseEntity<LoginUserPostResponseDto> loginUser(@RequestBody @Valid LoginUserPostRequestDto request) {
 
-    return new ResponseEntity<>(userService.login(request),HttpStatus.OK);
+    return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
   }
 }

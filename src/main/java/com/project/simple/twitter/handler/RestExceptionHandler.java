@@ -35,7 +35,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
   }
 
   @ExceptionHandler(InvalidCredentialsExceptions.class)
-  public ResponseEntity<ExceptionDetails> handleInvalidCredentialsExceptions(InvalidCredentialsExceptions ex) {
+  public ResponseEntity<ExceptionDetails> handleInvalidCredentialsException(InvalidCredentialsExceptions ex) {
 
     return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
   }

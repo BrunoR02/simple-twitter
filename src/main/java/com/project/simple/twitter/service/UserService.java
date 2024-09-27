@@ -64,6 +64,11 @@ public class UserService implements UserDetailsService {
     return Optional.ofNullable(userRepository.findByEmail(email));
   }
 
+  private User findByUsername(String username) {
+    return findByUsernameOptional(username)
+        .orElseThrow(() -> new NotFoundException("User not found"));
+  }
+
   private Optional<User> findByUsernameOptional(String username) {
     return Optional.ofNullable(userRepository.findByUsername(username));
   }
@@ -84,8 +89,8 @@ public class UserService implements UserDetailsService {
     return new GenericResponseDto("User was confirmed successfully");
   }
 
-  public GenericResponseDto update(UserPatchRequestDto request) {
-    User foundUser = findByEmail(request.getEmail());
+  public GenericResponseDto update(UserPatchRequestDto request, UserDetails userDetails) {
+    User foundUser = findByUsername(userDetails.getUsername());
 
     if (!foundUser.isRegistered())
       return new GenericResponseDto("User has not confirmed his account yet");
@@ -103,8 +108,8 @@ public class UserService implements UserDetailsService {
     return new GenericResponseDto("User was updated successfully");
   }
 
-  public UserGetResponseDto getSingleUser(String email) {
-    User foundUser = findByEmail(email);
+  public UserGetResponseDto getUserInfo(UserDetails userDetails) {
+    User foundUser = findByUsername(userDetails.getUsername());
 
     int age = 0;
     if (foundUser.getBirthDate() != null) {
