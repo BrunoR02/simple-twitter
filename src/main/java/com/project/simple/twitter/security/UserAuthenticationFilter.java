@@ -39,16 +39,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     String token = getHeaderToken(request);
-    if (isAuthenticationRequiredOnEndpoint(request) && token != null) {
 
+    if (isAuthenticationRequiredOnEndpoint(request)) {
+      
       try {
-        String tokenSubject = jwtTokenService.getTokenSubject(token);
-        UserDetails userDetails = userService.loadUserByUsername(tokenSubject);
+        UserDetails userDetails = getUserDetailsFromToken(token);
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-            userDetails.getAuthorities());
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        setUserAuthentication(userDetails);
       } catch (JWTVerificationException | UsernameNotFoundException exception) {
         handleInvalidAuthentication(response, exception);
         return;
@@ -56,6 +53,22 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private UserDetails getUserDetailsFromToken(String token) throws JWTVerificationException, UsernameNotFoundException {
+    if (token == null)
+      throw new JWTVerificationException("Token is not valid");
+
+    String tokenSubject = jwtTokenService.getTokenSubject(token);
+
+    return userService.loadUserByUsername(tokenSubject);
+  }
+
+  private void setUserAuthentication(UserDetails userDetails) {
+    Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+        userDetails.getAuthorities());
+
+    SecurityContextHolder.getContext().setAuthentication(authentication);
   }
 
   private void handleInvalidAuthentication(HttpServletResponse response, Exception exception) throws IOException {
@@ -73,7 +86,8 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
   }
 
   public boolean isAuthenticationRequiredOnEndpoint(HttpServletRequest request) {
-    return !(List.of(SecurityConstants.NO_AUTHENTICATION_POST_ENDPOINTS).contains(request.getRequestURI()) && request.getMethod() == "POST");
+    return !(List.of(SecurityConstants.NO_AUTHENTICATION_POST_ENDPOINTS).contains(request.getRequestURI())
+        && request.getMethod() == "POST");
   }
 
   public String getHeaderToken(HttpServletRequest request) {

@@ -1,8 +1,6 @@
 package com.project.simple.twitter.service;
 
 import java.time.LocalDateTime;
-import java.time.LocalDate;
-import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -111,15 +109,9 @@ public class UserService implements UserDetailsService {
   public UserGetResponseDto getUserInfo(UserDetails userDetails) {
     User foundUser = findByUsername(userDetails.getUsername());
 
-    int age = 0;
-    if (foundUser.getBirthDate() != null) {
-      Period agePeriod = Period.between(foundUser.getBirthDate(), LocalDate.now());
-      age = agePeriod.getYears();
-    }
-
     return UserGetResponseDto.builder()
         .displayName(foundUser.getDisplayName())
-        .age(age)
+        .age(foundUser.getAgeNumber())
         .createDate(foundUser.getCreatedAt().toLocalDate())
         .username(foundUser.getUsername())
         .accountStatus(foundUser.getStatus().getDisplayValue())
@@ -138,7 +130,7 @@ public class UserService implements UserDetailsService {
       throw new InvalidCredentialsExceptions("Email or password is incorrect");
 
     if (foundUser.isBlocked())
-      throw new BadRequestException("User is current blocked. Contact the support");
+      throw new BadRequestException("User is currently blocked. Contact the support");
 
     CustomUserDetails userDetails = CustomUserDetails.builder()
         .username(foundUser.getUsername())
@@ -159,7 +151,7 @@ public class UserService implements UserDetailsService {
 
     List<SimpleGrantedAuthority> authorities = foundUser.getRoles().stream()
         .map(Role::getName)
-        .map((name) -> new SimpleGrantedAuthority(name))
+        .map(SimpleGrantedAuthority::new)
         .toList();
 
     return CustomUserDetails.builder()

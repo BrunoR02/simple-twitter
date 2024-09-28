@@ -2,6 +2,7 @@ package com.project.simple.twitter.domain;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
-  
+
   @Column(unique = true, nullable = false)
   private String username;
 
@@ -64,18 +65,23 @@ public class User {
   @Enumerated(EnumType.STRING)
   private UserStatus status;
 
-  @ManyToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE},fetch = FetchType.EAGER)
-  @JoinTable(name = "users_roles",
-    joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-    inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
+  @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.EAGER)
+  @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
   private List<Role> roles;
 
-  public boolean isRegistered(){
+  public boolean isRegistered() {
     return status != UserStatus.UNREGISTERED;
   }
 
-  public boolean isBlocked(){
+  public boolean isBlocked() {
     return status == UserStatus.BLOCKED;
   }
-  
+
+  public int getAgeNumber() {
+    if (this.getBirthDate() == null)
+      return 0;
+
+    return Period.between(this.getBirthDate(), LocalDate.now()).getYears();
+  }
+
 }
