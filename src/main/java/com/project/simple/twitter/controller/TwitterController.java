@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.simple.twitter.dto.TwitterDto;
 import com.project.simple.twitter.dto.request.TwitterPatchRequestDto;
 import com.project.simple.twitter.dto.request.TwitterPostRequestDto;
-import com.project.simple.twitter.dto.response.TwittersGetResponseDto;
+import com.project.simple.twitter.dto.response.TwitterGetResponseDto;
+import com.project.simple.twitter.dto.response.UserTwittersGetResponseDto;
 import com.project.simple.twitter.service.TwitterService;
 
 import lombok.RequiredArgsConstructor;
@@ -41,14 +41,14 @@ public class TwitterController {
 
   @PreAuthorize("hasAuthority('USER')")
   @GetMapping
-  public ResponseEntity<TwittersGetResponseDto> getUserTwitters(@AuthenticationPrincipal UserDetails userDetails) {
+  public ResponseEntity<UserTwittersGetResponseDto> getUserTwitters(@AuthenticationPrincipal UserDetails userDetails) {
 
     return new ResponseEntity<>(twitterService.getUserTwitters(userDetails), HttpStatus.CREATED);
   }
 
   @PreAuthorize("hasAuthority('USER')")
   @GetMapping("/{id}")
-  public ResponseEntity<TwitterDto> getSingleTwitter(@PathVariable Long id,
+  public ResponseEntity<TwitterGetResponseDto> getSingleTwitter(@PathVariable Long id,
       @AuthenticationPrincipal UserDetails userDetails) {
 
     return new ResponseEntity<>(twitterService.getSingleTwitter(id, userDetails), HttpStatus.CREATED);

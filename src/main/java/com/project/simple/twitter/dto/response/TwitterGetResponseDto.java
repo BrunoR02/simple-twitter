@@ -1,4 +1,4 @@
-package com.project.simple.twitter.dto;
+package com.project.simple.twitter.dto.response;
 
 import java.time.LocalDateTime;
 
@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class TwitterDto {
+public class TwitterGetResponseDto {
 
   private long id;
 
@@ -27,8 +27,8 @@ public class TwitterDto {
 
   private boolean edited;
 
-  public static TwitterDto parse(Twitter twitter) {
-    return TwitterDto.builder()
+  public static TwitterGetResponseDto parse(Twitter twitter) {
+    return TwitterGetResponseDto.builder()
         .id(twitter.getId())
         .author(twitter.getAuthor().getUsername())
         .content(twitter.getContent())

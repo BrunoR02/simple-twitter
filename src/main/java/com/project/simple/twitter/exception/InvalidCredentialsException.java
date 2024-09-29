@@ -7,11 +7,11 @@ import lombok.Getter;
 
 @Getter
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class InvalidCredentialsExceptions extends RuntimeException implements GenericRequestException {
+public class InvalidCredentialsException extends RuntimeException implements GenericRequestException {
 
   private final String title = "Invalid Credentials Exception. Check Details";
   
-  public InvalidCredentialsExceptions(String message){
+  public InvalidCredentialsException(String message){
     super(message);
   }
 

@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 
 import com.project.simple.twitter.domain.Twitter;
 import com.project.simple.twitter.domain.User;
-import com.project.simple.twitter.dto.TwitterDto;
 import com.project.simple.twitter.dto.request.TwitterPatchRequestDto;
 import com.project.simple.twitter.dto.request.TwitterPostRequestDto;
-import com.project.simple.twitter.dto.response.TwittersGetResponseDto;
+import com.project.simple.twitter.dto.response.TwitterGetResponseDto;
+import com.project.simple.twitter.dto.response.UserTwittersGetResponseDto;
 import com.project.simple.twitter.enums.TwitterVisibility;
 import com.project.simple.twitter.exception.BadRequestException;
 import com.project.simple.twitter.exception.InvalidArgumentException;
@@ -50,21 +50,21 @@ public class TwitterService {
         .orElseThrow(() -> new NotFoundException("Twitter not found"));
   }
 
-  public TwittersGetResponseDto getUserTwitters(UserDetails userDetails) {
+  public UserTwittersGetResponseDto getUserTwitters(UserDetails userDetails) {
     User foundUser = userService.findByUsername(userDetails.getUsername());
 
     List<Twitter> twitters = twitterRepository.findAllByAuthorId(foundUser.getId());
 
-    List<TwitterDto> twitterDtos = twitters.stream()
-        .map(TwitterDto::parse)
+    List<TwitterGetResponseDto> twitterDtos = twitters.stream()
+        .map(TwitterGetResponseDto::parse)
         .toList();
 
-    return TwittersGetResponseDto.builder()
+    return UserTwittersGetResponseDto.builder()
         .twitters(twitterDtos)
         .build();
   }
 
-  public TwitterDto getSingleTwitter(Long id, UserDetails userDetails)
+  public TwitterGetResponseDto getSingleTwitter(Long id, UserDetails userDetails)
       throws NotFoundException, PermissionDeniedException {
     User foundUser = userService.findByUsername(userDetails.getUsername());
 
@@ -73,7 +73,7 @@ public class TwitterService {
     if (!foundTwitter.canUserView(foundUser))
       throw new PermissionDeniedException("User does not have permission to view this twitter");
 
-    return TwitterDto.parse(foundTwitter);
+    return TwitterGetResponseDto.parse(foundTwitter);
   }
 
   public void update(Long id, TwitterPatchRequestDto request, UserDetails userDetails)

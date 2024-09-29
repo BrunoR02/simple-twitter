@@ -1,4 +1,4 @@
-package com.project.simple.twitter.security;
+package com.project.simple.twitter.security.filter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -13,7 +13,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.simple.twitter.exception.ExceptionDetails;
+import com.project.simple.twitter.exception.details.ExceptionDetails;
+import com.project.simple.twitter.security.SecurityConstants;
 import com.project.simple.twitter.service.JwtTokenService;
 import com.project.simple.twitter.service.UserService;
 

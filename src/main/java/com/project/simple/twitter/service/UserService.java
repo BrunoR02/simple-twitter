@@ -22,7 +22,7 @@ import com.project.simple.twitter.dto.response.LoginUserPostResponseDto;
 import com.project.simple.twitter.dto.response.UserGetResponseDto;
 import com.project.simple.twitter.enums.UserStatus;
 import com.project.simple.twitter.exception.BadRequestException;
-import com.project.simple.twitter.exception.InvalidCredentialsExceptions;
+import com.project.simple.twitter.exception.InvalidCredentialsException;
 import com.project.simple.twitter.exception.NotFoundException;
 import com.project.simple.twitter.repository.UserRepository;
 import com.project.simple.twitter.security.SecurityConfig;
@@ -119,12 +119,12 @@ public class UserService implements UserDetailsService {
   }
 
   public LoginUserPostResponseDto login(LoginUserPostRequestDto request)
-      throws InvalidCredentialsExceptions, BadRequestException {
+      throws InvalidCredentialsException, BadRequestException {
     User foundUser = findByEmailOptional(request.getEmail())
-        .orElseThrow(() -> new InvalidCredentialsExceptions("Email or password is incorrect"));
+        .orElseThrow(() -> new InvalidCredentialsException("Email or password is incorrect"));
 
     if (!foundUser.isPasswordValid(request.getPassword()))
-      throw new InvalidCredentialsExceptions("Email or password is incorrect");
+      throw new InvalidCredentialsException("Email or password is incorrect");
 
     if (foundUser.isBlocked())
       throw new BadRequestException("User is currently blocked. Contact the support");

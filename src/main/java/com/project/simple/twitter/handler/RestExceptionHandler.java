@@ -14,44 +14,26 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.project.simple.twitter.exception.BadRequestException;
-import com.project.simple.twitter.exception.ExceptionDetails;
 import com.project.simple.twitter.exception.GenericRequestException;
 import com.project.simple.twitter.exception.InvalidArgumentException;
-import com.project.simple.twitter.exception.InvalidCredentialsExceptions;
+import com.project.simple.twitter.exception.InvalidCredentialsException;
 import com.project.simple.twitter.exception.NotFoundException;
 import com.project.simple.twitter.exception.PermissionDeniedException;
+import com.project.simple.twitter.exception.details.ExceptionDetails;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ExceptionHandler(NotFoundException.class)
-  public ResponseEntity<ExceptionDetails> handleNotFoundException(NotFoundException ex) {
+  @ExceptionHandler({
+    InvalidArgumentException.class,
+    PermissionDeniedException.class,
+    InvalidCredentialsException.class,
+    BadRequestException.class,
+    NotFoundException.class
+  })
+  public ResponseEntity<ExceptionDetails> handleInvalidArgumentException(GenericRequestException ex) {
 
-    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
-  }
-
-  @ExceptionHandler(BadRequestException.class)
-  public ResponseEntity<ExceptionDetails> handleBadRequestException(BadRequestException ex) {
-
-    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
-  }
-
-  @ExceptionHandler(InvalidCredentialsExceptions.class)
-  public ResponseEntity<ExceptionDetails> handleInvalidCredentialsException(InvalidCredentialsExceptions ex) {
-
-    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
-  }
-
-  @ExceptionHandler(PermissionDeniedException.class)
-  public ResponseEntity<ExceptionDetails> handlePermissionDeniedException(PermissionDeniedException ex) {
-
-    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
-  }
-
-  @ExceptionHandler(InvalidArgumentException.class)
-  public ResponseEntity<ExceptionDetails> handleInvalidArgumentException(InvalidArgumentException ex) {
-
-    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
+    return new ResponseEntity<>(ExceptionDetails.parse((ex)), ex.getStatusCode());
   }
 
   @Override
@@ -87,16 +69,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         .build();
 
     return new ResponseEntity<>(exceptionDetails, status);
-  }
-
-  private <TException extends GenericRequestException> ExceptionDetails getExceptionDetails(TException ex) {
-    return ExceptionDetails.builder()
-        .title(ex.getTitle())
-        .status(ex.getStatusCode().value())
-        .timestamp(LocalDateTime.now())
-        .details(ex.getMessage())
-        .developerMessage(ex.getClass().getName())
-        .build();
   }
 
 }
