@@ -2,7 +2,6 @@ package com.project.simple.twitter.security;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,7 +40,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     String token = getHeaderToken(request);
 
     if (isAuthenticationRequiredOnEndpoint(request)) {
-      
+
       try {
         UserDetails userDetails = getUserDetailsFromToken(token);
 
@@ -85,9 +84,9 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     response.getWriter().write(objectMapper.writeValueAsString(exceptionDetails));
   }
 
-  public boolean isAuthenticationRequiredOnEndpoint(HttpServletRequest request) {
-    return !(List.of(SecurityConstants.NO_AUTHENTICATION_POST_ENDPOINTS).contains(request.getRequestURI())
-        && request.getMethod() == "POST");
+  private boolean isAuthenticationRequiredOnEndpoint(HttpServletRequest request) {
+
+    return SecurityConstants.isAuthenticationEndpoint(request.getRequestURI(), request.getMethod());
   }
 
   public String getHeaderToken(HttpServletRequest request) {

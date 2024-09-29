@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.project.simple.twitter.enums.UserStatus;
+import com.project.simple.twitter.security.SecurityConfig;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -82,6 +83,10 @@ public class User {
       return 0;
 
     return Period.between(this.getBirthDate(), LocalDate.now()).getYears();
+  }
+
+  public boolean isPasswordValid(String requestPassword) {
+    return SecurityConfig.passwordEncoder().matches(requestPassword, this.password);
   }
 
 }

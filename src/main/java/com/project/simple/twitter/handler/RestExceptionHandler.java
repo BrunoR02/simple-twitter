@@ -16,8 +16,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import com.project.simple.twitter.exception.BadRequestException;
 import com.project.simple.twitter.exception.ExceptionDetails;
 import com.project.simple.twitter.exception.GenericRequestException;
+import com.project.simple.twitter.exception.InvalidArgumentException;
 import com.project.simple.twitter.exception.InvalidCredentialsExceptions;
 import com.project.simple.twitter.exception.NotFoundException;
+import com.project.simple.twitter.exception.PermissionDeniedException;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
@@ -36,6 +38,18 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ExceptionHandler(InvalidCredentialsExceptions.class)
   public ResponseEntity<ExceptionDetails> handleInvalidCredentialsException(InvalidCredentialsExceptions ex) {
+
+    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
+  }
+
+  @ExceptionHandler(PermissionDeniedException.class)
+  public ResponseEntity<ExceptionDetails> handlePermissionDeniedException(PermissionDeniedException ex) {
+
+    return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
+  }
+
+  @ExceptionHandler(InvalidArgumentException.class)
+  public ResponseEntity<ExceptionDetails> handleInvalidArgumentException(InvalidArgumentException ex) {
 
     return new ResponseEntity<>(getExceptionDetails(ex), ex.getStatusCode());
   }

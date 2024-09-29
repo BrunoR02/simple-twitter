@@ -53,7 +53,7 @@ public class UserService implements UserDetailsService {
     userRepository.save(newUser);
   }
 
-  private User findByEmail(String email) {
+  private User findByEmail(String email) throws NotFoundException {
     return findByEmailOptional(email)
         .orElseThrow(() -> new NotFoundException("User not found"));
   }
@@ -62,7 +62,7 @@ public class UserService implements UserDetailsService {
     return Optional.ofNullable(userRepository.findByEmail(email));
   }
 
-  private User findByUsername(String username) {
+  public User findByUsername(String username) throws NotFoundException {
     return findByUsernameOptional(username)
         .orElseThrow(() -> new NotFoundException("User not found"));
   }
@@ -118,15 +118,12 @@ public class UserService implements UserDetailsService {
         .build();
   }
 
-  private boolean isPasswordValid(String userPassword, String requestPassword) {
-    return SecurityConfig.passwordEncoder().matches(requestPassword,userPassword);
-  }
-
-  public LoginUserPostResponseDto login(LoginUserPostRequestDto request) {
+  public LoginUserPostResponseDto login(LoginUserPostRequestDto request)
+      throws InvalidCredentialsExceptions, BadRequestException {
     User foundUser = findByEmailOptional(request.getEmail())
         .orElseThrow(() -> new InvalidCredentialsExceptions("Email or password is incorrect"));
 
-    if (!isPasswordValid(foundUser.getPassword(), request.getPassword()))
+    if (!foundUser.isPasswordValid(request.getPassword()))
       throw new InvalidCredentialsExceptions("Email or password is incorrect");
 
     if (foundUser.isBlocked())
