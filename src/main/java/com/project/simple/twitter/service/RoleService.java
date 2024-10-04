@@ -16,13 +16,12 @@ public class RoleService {
 
   private final RoleRepository roleRepository;
 
-  public Role findRoleByName(String name) {
+  public Role findRoleByName(String name) throws IllegalArgumentException, EntityNotFoundException {
+    if (name == null || name.isEmpty())
+      throw new IllegalArgumentException("Role name cannot be null or empty");
+
     return Optional.ofNullable(roleRepository.findByName(name))
         .orElseThrow(() -> new EntityNotFoundException(String.format("Role with name '%s' was not found", name)));
-  }
-
-  public Role getDefaultUserRole() {
-    return findRoleByName("USER");
   }
 
 }

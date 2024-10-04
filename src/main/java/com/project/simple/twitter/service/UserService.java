@@ -40,14 +40,14 @@ public class UserService implements UserDetailsService {
   private final JwtTokenService jwtTokenService;
 
   public void create(UserPostRequestDto request) {
-    Role defaultRole = roleService.getDefaultUserRole();
+    Role userRole = roleService.findRoleByName("USER");
 
     User newUser = User.builder()
         .username(request.getUsername())
         .email(request.getEmail())
         .password(SecurityConfig.passwordEncoder().encode(request.getPassword()))
         .status(UserStatus.UNREGISTERED)
-        .roles(List.of(defaultRole))
+        .roles(List.of(userRole))
         .build();
 
     userRepository.save(newUser);
