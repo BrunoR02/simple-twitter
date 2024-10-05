@@ -18,6 +18,8 @@ public class JwtTokenService {
   private static final String ISSUER = "simple_twitter";
 
   public <TUser extends UserDetails> String generateToken(TUser userDetails) {
+    if (userDetails == null)
+      throw new IllegalArgumentException("UserDetails cannot be null");
 
     return JWT.create()
         .withSubject(userDetails.getUsername())
@@ -27,23 +29,26 @@ public class JwtTokenService {
         .sign(getAlgorithm());
   }
 
-  private Algorithm getAlgorithm(){
+  public Algorithm getAlgorithm() {
     return Algorithm.HMAC256(SECRET_KEY);
   }
 
   public String getTokenSubject(String token) throws JWTVerificationException {
+    if (token == null || token.isEmpty())
+      throw new IllegalArgumentException("Token cannot be null or empty");
+
     return JWT.require(getAlgorithm())
-      .withIssuer(ISSUER)
-      .build()
-      .verify(token)
-      .getSubject();
+        .withIssuer(ISSUER)
+        .build()
+        .verify(token)
+        .getSubject();
   }
 
-  public Instant getDefaultExpirationDate(){
-    return Instant.now().plus(getExpirationTime(), ChronoUnit.SECONDS);
+  public Instant getDefaultExpirationDate() {
+    return Instant.now().plus(getExpirationTimeInSeconds(), ChronoUnit.SECONDS);
   }
 
-  public Long getExpirationTime(){
+  public Long getExpirationTimeInSeconds() {
     return ChronoUnit.HOURS.getDuration().toSeconds() * 3;
   }
 

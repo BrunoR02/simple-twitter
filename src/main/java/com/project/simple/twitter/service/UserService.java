@@ -137,7 +137,7 @@ public class UserService implements UserDetailsService {
 
     return LoginUserPostResponseDto.builder()
         .accessToken(accessToken)
-        .expiresIn(jwtTokenService.getExpirationTime())
+        .expiresIn(jwtTokenService.getExpirationTimeInSeconds())
         .build();
   }
 
