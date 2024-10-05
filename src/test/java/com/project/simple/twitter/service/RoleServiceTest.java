@@ -29,7 +29,7 @@ class RoleServiceTest {
 
   @Test
   @DisplayName("findRoleByName should return Role when name is valid")
-  void findRoleByName_ReturnRole_WhenNameIsValid() {
+  void findRoleByName_ShouldReturnRole_WhenNameIsValid() {
     // Arrange
     String validRoleName = "USER";
     Role role = new Role(1L, validRoleName);
@@ -49,7 +49,7 @@ class RoleServiceTest {
 
   @Test
   @DisplayName("findRoleByName should throw EntityNotFoundException when name is invalid")
-  void findRoleByName_ThrowsEntityNotFoundException_WhenNameIsInvalid() {
+  void findRoleByName_ShouldThrowsEntityNotFoundException_WhenNameIsInvalid() {
     // Arrange
     String invalidRoleName = "ADMIN";
 
@@ -66,7 +66,7 @@ class RoleServiceTest {
 
   @Test
   @DisplayName("findRoleByName should throw IllegalArgumentException when name is null or empty")
-  void findRoleByName_ThrowsIllegalArgumentException_WhenNameIsNullOrEmpty() {
+  void findRoleByName_ShouldThrowsIllegalArgumentException_WhenNameIsNullOrEmpty() {
 
     // Act & Assert (null case)
     Assertions.assertThatThrownBy(() -> roleService.findRoleByName(null))

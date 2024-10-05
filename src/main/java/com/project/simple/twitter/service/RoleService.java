@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.project.simple.twitter.domain.Role;
 import com.project.simple.twitter.repository.RoleRepository;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +18,7 @@ public class RoleService {
   private final RoleRepository roleRepository;
 
   public Role findRoleByName(String name) throws IllegalArgumentException, EntityNotFoundException {
-    if (name == null || name.isEmpty())
+    if (StringUtils.isEmpty(name))
       throw new IllegalArgumentException("Role name cannot be null or empty");
 
     return Optional.ofNullable(roleRepository.findByName(name))

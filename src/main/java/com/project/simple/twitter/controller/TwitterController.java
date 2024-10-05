@@ -34,7 +34,9 @@ public class TwitterController {
   public ResponseEntity<Void> createTwitter(@RequestBody TwitterPostRequestDto request,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    twitterService.create(request, userDetails);
+    twitterService.setUserDetails(userDetails);
+
+    twitterService.create(request);
 
     return new ResponseEntity<>(HttpStatus.CREATED);
   }
@@ -43,7 +45,9 @@ public class TwitterController {
   @GetMapping
   public ResponseEntity<UserTwittersGetResponseDto> getUserTwitters(@AuthenticationPrincipal UserDetails userDetails) {
 
-    return new ResponseEntity<>(twitterService.getUserTwitters(userDetails), HttpStatus.CREATED);
+    twitterService.setUserDetails(userDetails);
+
+    return new ResponseEntity<>(twitterService.getUserTwitters(), HttpStatus.CREATED);
   }
 
   @PreAuthorize("hasAuthority('USER')")
@@ -51,7 +55,9 @@ public class TwitterController {
   public ResponseEntity<TwitterGetResponseDto> getSingleTwitter(@PathVariable Long id,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    return new ResponseEntity<>(twitterService.getSingleTwitter(id, userDetails), HttpStatus.CREATED);
+    twitterService.setUserDetails(userDetails);
+
+    return new ResponseEntity<>(twitterService.getSingleTwitter(id), HttpStatus.CREATED);
   }
 
   @PreAuthorize("hasAuthority('USER')")
@@ -60,7 +66,9 @@ public class TwitterController {
       @RequestBody TwitterPatchRequestDto request,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    twitterService.update(id, request, userDetails);
+    twitterService.setUserDetails(userDetails);
+
+    twitterService.update(id, request);
 
     return new ResponseEntity<>(HttpStatus.ACCEPTED);
   }
@@ -70,7 +78,9 @@ public class TwitterController {
   public ResponseEntity<Void> updateTwitter(@PathVariable Long id,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    twitterService.delete(id, userDetails);
+    twitterService.setUserDetails(userDetails);
+
+    twitterService.delete(id);
 
     return new ResponseEntity<>(HttpStatus.ACCEPTED);
   }

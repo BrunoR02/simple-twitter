@@ -1,4 +1,4 @@
-package com.project.simple.twitter.enums;
+package com.project.simple.twitter.enums.twitter;
 
 import java.util.Optional;
 

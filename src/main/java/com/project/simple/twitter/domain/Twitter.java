@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.project.simple.twitter.enums.TwitterVisibility;
+import com.project.simple.twitter.enums.twitter.TwitterVisibility;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

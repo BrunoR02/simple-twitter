@@ -8,6 +8,9 @@ import org.mockito.InjectMocks;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.project.simple.twitter.domain.CustomUserDetails;
 
@@ -78,8 +81,15 @@ public class JwtTokenServiceTest {
   @Test
   @DisplayName("getTokenSubject should throw JWTVerificationException when token is invalid")
   void getTokenSubject_ShouldThrowJWTVerificationException_WhenTokenIsInvalid() {
+    // Arrange
+    String expiredToken = getExpiredToken("brunolucas");
 
-    // Act & Assert
+    // Act & Assert (Expired Token)
+    Assertions.assertThatThrownBy(() -> jwtTokenService.getTokenSubject(expiredToken))
+        .isInstanceOf(JWTVerificationException.class)
+        .hasMessageStartingWith("The Token has expired");
+
+    // Act & Assert (Invalid Token)
     Assertions.assertThatThrownBy(() -> jwtTokenService.getTokenSubject("asdnkjalsda"))
         .isInstanceOf(JWTVerificationException.class);
   }
@@ -90,5 +100,15 @@ public class JwtTokenServiceTest {
         .build();
 
     return jwtTokenService.generateToken(userDetails);
+  }
+
+  private String getExpiredToken(String subject) {
+    UserDetails userDetails = CustomUserDetails.builder()
+        .username(subject)
+        .build();
+
+    Instant pastTime = Instant.now().minus(3, ChronoUnit.HOURS);
+
+    return jwtTokenService.generateToken(userDetails, pastTime);
   }
 }

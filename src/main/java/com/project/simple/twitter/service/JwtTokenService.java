@@ -29,6 +29,18 @@ public class JwtTokenService {
         .sign(getAlgorithm());
   }
 
+  public <TUser extends UserDetails> String generateToken(TUser userDetails, Instant expiresAt) {
+    if (userDetails == null)
+      throw new IllegalArgumentException("UserDetails cannot be null");
+
+    return JWT.create()
+        .withSubject(userDetails.getUsername())
+        .withIssuer(ISSUER)
+        .withIssuedAt(Instant.now())
+        .withExpiresAt(expiresAt)
+        .sign(getAlgorithm());
+  }
+
   public Algorithm getAlgorithm() {
     return Algorithm.HMAC256(SECRET_KEY);
   }
