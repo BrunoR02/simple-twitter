@@ -53,19 +53,31 @@ public class Twitter {
     return visibility == TwitterVisibility.PUBLIC;
   }
 
-  public String getVisibilityValue(){
+  public String getVisibilityValue() {
     return visibility.name().toLowerCase();
   }
 
-  public boolean isEdited(){
+  public boolean isEdited() {
     return !createdAt.equals(updatedAt);
   }
-  
+
   public boolean canUserView(User user) {
     return this.isPublic() || isUserOwner(user);
   }
 
   public boolean isUserOwner(User user) {
-    return user.getId() == this.getAuthor().getId();
+    return user.getId().equals(this.getAuthor().getId());
+  }
+
+  public static Twitter createNew(String content, User user) {
+    LocalDateTime now = LocalDateTime.now();
+
+    return Twitter.builder()
+        .content(content)
+        .author(user)
+        .createdAt(now)
+        .updatedAt(now)
+        .visibility(TwitterVisibility.PUBLIC)
+        .build();
   }
 }

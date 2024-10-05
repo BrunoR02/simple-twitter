@@ -8,10 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.project.simple.twitter.domain.Twitter;
 import com.project.simple.twitter.domain.User;
-import com.project.simple.twitter.dto.request.TwitterPatchRequestDto;
-import com.project.simple.twitter.dto.request.TwitterPostRequestDto;
-import com.project.simple.twitter.dto.response.TwitterGetResponseDto;
-import com.project.simple.twitter.dto.response.UserTwittersGetResponseDto;
+import com.project.simple.twitter.dto.twitter.TwitterDto;
+import com.project.simple.twitter.dto.twitter.UpdateTwitterDto;
+import com.project.simple.twitter.dto.twitter.CreateTwitterDto;
 import com.project.simple.twitter.enums.twitter.TwitterPermission;
 import com.project.simple.twitter.enums.twitter.TwitterVisibility;
 import com.project.simple.twitter.exception.BadRequestException;
@@ -51,26 +50,11 @@ public class TwitterService {
       throw new PermissionDeniedException("User does not have permission to modify this twitter");
   }
 
-  public void create(TwitterPostRequestDto request) throws NotFoundException, InvalidCredentialsException {
-    if (request == null)
-      throw new IllegalArgumentException("Request cannot be null");
-    if (StringUtils.isEmpty(request.getContent()))
+  private void validateCreateDto(CreateTwitterDto dto) {
+    if (dto == null)
+      throw new IllegalArgumentException("CreateTwitter object cannot be null");
+    if (StringUtils.isEmpty(dto.getContent()))
       throw new IllegalArgumentException("Content cannot be null or empty");
-
-    User user = getAuthenticatedUser();
-
-    LocalDateTime now = LocalDateTime.now();
-
-    Twitter twitter = Twitter.builder()
-        .content(request.getContent())
-        .author(user)
-        .createdAt(now)
-        .updatedAt(now)
-        .likes(0)
-        .visibility(TwitterVisibility.PUBLIC)
-        .build();
-
-    twitterRepository.save(twitter);
   }
 
   private Twitter findById(Long id) throws NotFoundException {
@@ -78,21 +62,28 @@ public class TwitterService {
         .orElseThrow(() -> new NotFoundException("Twitter not found"));
   }
 
-  public UserTwittersGetResponseDto getUserTwitters() throws InvalidCredentialsException {
+  public void create(CreateTwitterDto dto)
+      throws NotFoundException, InvalidCredentialsException, IllegalArgumentException {
+    validateCreateDto(dto);
+
+    User user = getAuthenticatedUser();
+
+    Twitter twitter = Twitter.createNew(dto.getContent(), user);
+
+    twitterRepository.save(twitter);
+  }
+
+  public List<TwitterDto> getUserTwitters() throws InvalidCredentialsException {
     User user = getAuthenticatedUser();
 
     List<Twitter> twitters = twitterRepository.findAllByAuthorId(user.getId());
 
-    List<TwitterGetResponseDto> twitterDtos = twitters.stream()
-        .map(TwitterGetResponseDto::parse)
+    return twitters.stream()
+        .map(TwitterDto::parse)
         .toList();
-
-    return UserTwittersGetResponseDto.builder()
-        .twitters(twitterDtos)
-        .build();
   }
 
-  public TwitterGetResponseDto getSingleTwitter(Long id)
+  public TwitterDto getSingleTwitter(Long id)
       throws NotFoundException, PermissionDeniedException, InvalidCredentialsException {
     User user = getAuthenticatedUser();
 
@@ -100,29 +91,32 @@ public class TwitterService {
 
     validatePermission(foundTwitter, user, TwitterPermission.VIEW);
 
-    return TwitterGetResponseDto.parse(foundTwitter);
+    return TwitterDto.parse(foundTwitter);
   }
 
-  public void update(Long id, TwitterPatchRequestDto request)
+  public Twitter update(Long id, UpdateTwitterDto dto)
       throws NotFoundException, BadRequestException, InvalidArgumentException {
+    if(dto == null)
+      throw new IllegalArgumentException("UpdateTwitter object cannot be null");
+
     User user = getAuthenticatedUser();
 
     Twitter foundTwitter = findById(id);
 
     validatePermission(foundTwitter, user, TwitterPermission.MODIFY);
 
-    if (StringUtils.isNotBlank(request.getContent()))
-      foundTwitter.setContent(request.getContent());
+    if (StringUtils.isNotBlank(dto.getContent()))
+      foundTwitter.setContent(dto.getContent());
 
-    if (request.getVisibilityValue() != null)
-      foundTwitter.setVisibility(TwitterVisibility.parse(request.getVisibilityValue()));
+    if (dto.getVisibilityValue() != null)
+      foundTwitter.setVisibility(TwitterVisibility.parse(dto.getVisibilityValue()));
 
-    if (foundTwitter.getLikes() != request.getLikes())
-      foundTwitter.setLikes(request.getLikes());
+    if (foundTwitter.getLikes() != dto.getLikes())
+      foundTwitter.setLikes(dto.getLikes());
 
     foundTwitter.setUpdatedAt(LocalDateTime.now());
 
-    twitterRepository.save(foundTwitter);
+    return twitterRepository.save(foundTwitter);
   }
 
   public void delete(Long id) throws NotFoundException, PermissionDeniedException, InvalidCredentialsException {

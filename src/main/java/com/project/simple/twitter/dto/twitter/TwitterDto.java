@@ -1,16 +1,17 @@
-package com.project.simple.twitter.dto.response;
+package com.project.simple.twitter.dto.twitter;
 
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.simple.twitter.domain.Twitter;
+import com.project.simple.twitter.enums.twitter.TwitterVisibility;
 
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class TwitterGetResponseDto {
+public class TwitterDto {
 
   private long id;
 
@@ -27,8 +28,19 @@ public class TwitterGetResponseDto {
 
   private boolean edited;
 
-  public static TwitterGetResponseDto parse(Twitter twitter) {
-    return TwitterGetResponseDto.builder()
+  public static TwitterDto parse(Twitter twitter) {
+    if (twitter == null)
+      throw new IllegalArgumentException("Twitter cannot be null");
+    if (twitter.getAuthor() == null)
+      throw new IllegalArgumentException("Twitter author cannot be null");
+
+    if (twitter.getCreatedAt() == null)
+      twitter.setCreatedAt(LocalDateTime.now());
+
+    if (twitter.getVisibility() == null)
+      twitter.setVisibility(TwitterVisibility.PUBLIC);
+
+    return TwitterDto.builder()
         .id(twitter.getId())
         .author(twitter.getAuthor().getUsername())
         .content(twitter.getContent())

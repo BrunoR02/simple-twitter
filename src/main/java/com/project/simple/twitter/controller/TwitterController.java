@@ -1,5 +1,7 @@
 package com.project.simple.twitter.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,10 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.simple.twitter.dto.request.TwitterPatchRequestDto;
-import com.project.simple.twitter.dto.request.TwitterPostRequestDto;
-import com.project.simple.twitter.dto.response.TwitterGetResponseDto;
-import com.project.simple.twitter.dto.response.UserTwittersGetResponseDto;
+import com.project.simple.twitter.dto.twitter.TwitterDto;
+import com.project.simple.twitter.dto.twitter.UpdateTwitterDto;
+import com.project.simple.twitter.dto.twitter.CreateTwitterDto;
 import com.project.simple.twitter.service.TwitterService;
 
 import lombok.RequiredArgsConstructor;
@@ -31,11 +32,10 @@ public class TwitterController {
 
   @PreAuthorize("hasAuthority('USER')")
   @PostMapping
-  public ResponseEntity<Void> createTwitter(@RequestBody TwitterPostRequestDto request,
+  public ResponseEntity<Void> createTwitter(@RequestBody CreateTwitterDto request,
       @AuthenticationPrincipal UserDetails userDetails) {
 
     twitterService.setUserDetails(userDetails);
-
     twitterService.create(request);
 
     return new ResponseEntity<>(HttpStatus.CREATED);
@@ -43,7 +43,7 @@ public class TwitterController {
 
   @PreAuthorize("hasAuthority('USER')")
   @GetMapping
-  public ResponseEntity<UserTwittersGetResponseDto> getUserTwitters(@AuthenticationPrincipal UserDetails userDetails) {
+  public ResponseEntity<List<TwitterDto>> getUserTwitters(@AuthenticationPrincipal UserDetails userDetails) {
 
     twitterService.setUserDetails(userDetails);
 
@@ -52,7 +52,7 @@ public class TwitterController {
 
   @PreAuthorize("hasAuthority('USER')")
   @GetMapping("/{id}")
-  public ResponseEntity<TwitterGetResponseDto> getSingleTwitter(@PathVariable Long id,
+  public ResponseEntity<TwitterDto> getSingleTwitter(@PathVariable Long id,
       @AuthenticationPrincipal UserDetails userDetails) {
 
     twitterService.setUserDetails(userDetails);
@@ -63,11 +63,10 @@ public class TwitterController {
   @PreAuthorize("hasAuthority('USER')")
   @PatchMapping("/{id}")
   public ResponseEntity<Void> updateTwitter(@PathVariable Long id,
-      @RequestBody TwitterPatchRequestDto request,
+      @RequestBody UpdateTwitterDto request,
       @AuthenticationPrincipal UserDetails userDetails) {
 
     twitterService.setUserDetails(userDetails);
-
     twitterService.update(id, request);
 
     return new ResponseEntity<>(HttpStatus.ACCEPTED);
@@ -79,7 +78,6 @@ public class TwitterController {
       @AuthenticationPrincipal UserDetails userDetails) {
 
     twitterService.setUserDetails(userDetails);
-
     twitterService.delete(id);
 
     return new ResponseEntity<>(HttpStatus.ACCEPTED);

@@ -16,7 +16,7 @@ public enum TwitterVisibility {
 
     return Optional.ofNullable(foundItem)
         .orElseThrow(() -> new InvalidArgumentException(
-            "Visibility value is not valid. Permitted arguments: 'public', 'private'"));
+            "Visibility value is invalid. Only 'public' or 'private' is permitted"));
   }
 
 }
