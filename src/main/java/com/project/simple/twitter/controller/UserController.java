@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.simple.twitter.dto.request.ConfirmUserPatchRequestDto;
-import com.project.simple.twitter.dto.request.LoginUserPostRequestDto;
-import com.project.simple.twitter.dto.request.UserPatchRequestDto;
-import com.project.simple.twitter.dto.request.UserPostRequestDto;
 import com.project.simple.twitter.dto.response.GenericResponseDto;
-import com.project.simple.twitter.dto.response.LoginUserPostResponseDto;
-import com.project.simple.twitter.dto.response.UserGetResponseDto;
+import com.project.simple.twitter.dto.user.AccessUserDto;
+import com.project.simple.twitter.dto.user.ConfirmUserDto;
+import com.project.simple.twitter.dto.user.CreateUserDto;
+import com.project.simple.twitter.dto.user.LoginUserDto;
+import com.project.simple.twitter.dto.user.UpdateUserDto;
+import com.project.simple.twitter.dto.user.UserDto;
 import com.project.simple.twitter.service.UserService;
 
 import jakarta.validation.Valid;
@@ -32,7 +32,7 @@ public class UserController {
   private final UserService userService;
 
   @PostMapping
-  public ResponseEntity<Void> createUser(@RequestBody @Valid UserPostRequestDto request) {
+  public ResponseEntity<Void> createUser(@RequestBody @Valid CreateUserDto request) {
 
     userService.create(request);
 
@@ -40,28 +40,32 @@ public class UserController {
   }
 
   @PatchMapping("/confirm")
-  public ResponseEntity<GenericResponseDto> confirmUser(@RequestBody @Valid ConfirmUserPatchRequestDto request) {
+  public ResponseEntity<GenericResponseDto> confirmUser(@RequestBody @Valid ConfirmUserDto request) {
 
     return new ResponseEntity<>(userService.confirm(request), HttpStatus.ACCEPTED);
   }
 
   @PreAuthorize("hasAuthority('USER')")
   @PatchMapping
-  public ResponseEntity<GenericResponseDto> updateUser(@RequestBody @Valid UserPatchRequestDto request,
+  public ResponseEntity<GenericResponseDto> updateUser(@RequestBody @Valid UpdateUserDto request,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    return new ResponseEntity<>(userService.update(request, userDetails), HttpStatus.ACCEPTED);
+    userService.setUserDetails(userDetails);
+
+    return new ResponseEntity<>(userService.update(request), HttpStatus.ACCEPTED);
   }
 
   @PreAuthorize("hasAuthority('USER')")
   @GetMapping("/info")
-  public ResponseEntity<UserGetResponseDto> getUser(@AuthenticationPrincipal UserDetails userDetails) {
+  public ResponseEntity<UserDto> getUser(@AuthenticationPrincipal UserDetails userDetails) {
+    
+    userService.setUserDetails(userDetails);
 
-    return new ResponseEntity<>(userService.getUserInfo(userDetails), HttpStatus.OK);
+    return new ResponseEntity<>(userService.getUser(), HttpStatus.OK);
   }
 
   @PostMapping("/login")
-  public ResponseEntity<LoginUserPostResponseDto> loginUser(@RequestBody @Valid LoginUserPostRequestDto request) {
+  public ResponseEntity<AccessUserDto> loginUser(@RequestBody @Valid LoginUserDto request) {
 
     return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
   }

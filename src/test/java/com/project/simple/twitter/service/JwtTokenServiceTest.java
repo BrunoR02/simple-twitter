@@ -42,8 +42,13 @@ public class JwtTokenServiceTest {
   @DisplayName("generateToken should throw IllegalArgumentException when userDetails is null")
   void generateToken_ShouldThrowIllegalArgumentException_WhenUserDetailsIsNull() {
 
-    // Act & Assert
+    // Act & Assert (with no expiresAt parameter)
     Assertions.assertThatThrownBy(() -> jwtTokenService.generateToken(null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UserDetails cannot be null");
+
+    // Act & Assert (with expiresAt parameter)
+    Assertions.assertThatThrownBy(() -> jwtTokenService.generateToken(null, null))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("UserDetails cannot be null");
   }

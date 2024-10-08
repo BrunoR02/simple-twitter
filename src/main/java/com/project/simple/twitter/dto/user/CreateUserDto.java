@@ -1,13 +1,15 @@
-package com.project.simple.twitter.dto.request;
+package com.project.simple.twitter.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserPostRequestDto {
+@Builder
+public class CreateUserDto {
 
   @NotEmpty(message = "username is required")
   private String username;

@@ -17,7 +17,9 @@ public class JwtTokenService {
 
   private static final String ISSUER = "simple_twitter";
 
-  public <TUser extends UserDetails> String generateToken(TUser userDetails) {
+  public static final Long EXPIRATION_TIME_IN_SECONDS = ChronoUnit.HOURS.getDuration().toSeconds() * 3;
+
+  public String generateToken(UserDetails userDetails) {
     if (userDetails == null)
       throw new IllegalArgumentException("UserDetails cannot be null");
 
@@ -29,7 +31,7 @@ public class JwtTokenService {
         .sign(getAlgorithm());
   }
 
-  public <TUser extends UserDetails> String generateToken(TUser userDetails, Instant expiresAt) {
+  public String generateToken(UserDetails userDetails, Instant expiresAt) {
     if (userDetails == null)
       throw new IllegalArgumentException("UserDetails cannot be null");
 
@@ -57,11 +59,7 @@ public class JwtTokenService {
   }
 
   public Instant getDefaultExpirationDate() {
-    return Instant.now().plus(getExpirationTimeInSeconds(), ChronoUnit.SECONDS);
-  }
-
-  public Long getExpirationTimeInSeconds() {
-    return ChronoUnit.HOURS.getDuration().toSeconds() * 3;
+    return Instant.now().plus(EXPIRATION_TIME_IN_SECONDS, ChronoUnit.SECONDS);
   }
 
 }

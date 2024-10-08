@@ -12,15 +12,16 @@ public class SecurityConstants {
       "/users", "POST");
 
   public static boolean isAuthenticationEndpoint(String endpoint, String httpMethod) {
-    boolean isNoAuthenticationEndpoint = NO_AUTHENTICATION_ENDPOINT_TO_METHOD_MAP.containsKey(endpoint);
-    if (!isNoAuthenticationEndpoint)
+    boolean isAuthenticationEndpoint = !NO_AUTHENTICATION_ENDPOINT_TO_METHOD_MAP.containsKey(endpoint);
+    if (isAuthenticationEndpoint)
       return true;
 
     return !NO_AUTHENTICATION_ENDPOINT_TO_METHOD_MAP.get(endpoint).equals(httpMethod);
   }
 
   public static AntPathRequestMatcher[] getNoAuthenticationEndpointMatchers() {
-    return NO_AUTHENTICATION_ENDPOINT_TO_METHOD_MAP.entrySet().stream()
+    return NO_AUTHENTICATION_ENDPOINT_TO_METHOD_MAP.entrySet()
+        .stream()
         .map((entry) -> new AntPathRequestMatcher(entry.getKey(), entry.getValue()))
         .toList().toArray(new AntPathRequestMatcher[0]);
   }

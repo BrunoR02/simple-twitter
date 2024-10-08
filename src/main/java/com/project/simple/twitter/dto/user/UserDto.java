@@ -1,4 +1,4 @@
-package com.project.simple.twitter.dto.response;
+package com.project.simple.twitter.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class UserGetResponseDto {
+public class UserDto {
 
   private String username;
 

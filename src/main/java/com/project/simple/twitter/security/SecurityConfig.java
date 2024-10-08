@@ -30,6 +30,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(authorizer -> authorizer
             .requestMatchers(SecurityConstants.getNoAuthenticationEndpointMatchers())
             .permitAll()
+            .requestMatchers("/twitters")
+            .hasAuthority("USER")
             .anyRequest()
             .authenticated())
         .addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -1,11 +1,11 @@
-package com.project.simple.twitter.dto.response;
+package com.project.simple.twitter.dto.user;
 
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class LoginUserPostResponseDto {
+public class AccessUserDto {
   
   private String accessToken;
 

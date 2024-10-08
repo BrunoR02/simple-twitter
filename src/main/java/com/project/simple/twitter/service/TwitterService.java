@@ -13,7 +13,6 @@ import com.project.simple.twitter.dto.twitter.UpdateTwitterDto;
 import com.project.simple.twitter.dto.twitter.CreateTwitterDto;
 import com.project.simple.twitter.enums.twitter.TwitterPermission;
 import com.project.simple.twitter.enums.twitter.TwitterVisibility;
-import com.project.simple.twitter.exception.BadRequestException;
 import com.project.simple.twitter.exception.InvalidArgumentException;
 import com.project.simple.twitter.exception.InvalidCredentialsException;
 import com.project.simple.twitter.exception.NotFoundException;
@@ -34,11 +33,8 @@ public class TwitterService {
 
   private UserDetails userDetails;
 
-  private User getAuthenticatedUser() {
-    if (userDetails == null)
-      throw new InvalidCredentialsException("User is not authenticated");
-
-    return userService.findByUsername(userDetails.getUsername());
+  private User getAuthenticatedUser() throws InvalidCredentialsException {
+    return userService.getAuthenticatedUser(userDetails);
   }
 
   private void validatePermission(Twitter twitter, User user, TwitterPermission permission)
@@ -57,7 +53,7 @@ public class TwitterService {
       throw new IllegalArgumentException("Content cannot be null or empty");
   }
 
-  private Twitter findById(Long id) throws NotFoundException {
+  public Twitter findById(Long id) throws NotFoundException {
     return twitterRepository.findById(id)
         .orElseThrow(() -> new NotFoundException("Twitter not found"));
   }
@@ -95,7 +91,7 @@ public class TwitterService {
   }
 
   public Twitter update(Long id, UpdateTwitterDto dto)
-      throws NotFoundException, BadRequestException, InvalidArgumentException {
+      throws NotFoundException, InvalidArgumentException {
     if(dto == null)
       throw new IllegalArgumentException("UpdateTwitter object cannot be null");
 

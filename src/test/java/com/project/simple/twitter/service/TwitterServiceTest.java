@@ -2,7 +2,6 @@ package com.project.simple.twitter.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -33,7 +32,6 @@ import com.project.simple.twitter.dto.twitter.UpdateTwitterDto;
 import com.project.simple.twitter.enums.UserStatus;
 import com.project.simple.twitter.enums.twitter.TwitterVisibility;
 import com.project.simple.twitter.exception.InvalidArgumentException;
-import com.project.simple.twitter.exception.InvalidCredentialsException;
 import com.project.simple.twitter.exception.NotFoundException;
 import com.project.simple.twitter.exception.PermissionDeniedException;
 import com.project.simple.twitter.repository.TwitterRepository;
@@ -62,6 +60,8 @@ class TwitterServiceTest {
     userDetails = CustomUserDetails.builder()
         .username("brunolucas")
         .build();
+
+    twitterService.setUserDetails(userDetails);
 
     user = User.builder()
         .id(UUID.randomUUID())
@@ -105,41 +105,59 @@ class TwitterServiceTest {
   }
 
   @Test
+  @DisplayName("findById should throw NotFoundException when twitter is not found")
+  void findById_ShouldThrowNotFoundException_WhenTwitterIsNotFound() {
+    // Arrange
+    Long searchId = 1L;
+
+    when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(null));
+
+    // Act & Assert
+    Assertions.assertThatThrownBy(() -> twitterService.findById(searchId))
+        .isInstanceOf(NotFoundException.class)
+        .hasMessage("Twitter not found");
+
+    // Verify that TwitterRepository method 'findById' was called correctly
+    verify(twitterRepository, times(1)).findById(same(searchId));
+  }
+
+  @Test
+  @DisplayName("findById should return twitter when twitter is found")
+  void findById_ShouldReturnTwitter_WhenTwitterIsFound() {
+    // Arrange
+    Twitter twitterFromRepository = getTwitterFromRepository();
+    Long searchId = twitterFromRepository.getId();
+
+    when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(twitterFromRepository));
+
+    // Act
+    Twitter foundTwitter = twitterService.findById(searchId);
+
+    // Assert
+    Assertions.assertThat(foundTwitter).isNotNull();
+    Assertions.assertThat(foundTwitter.getId()).isEqualTo(twitterFromRepository.getId());
+
+    // Verify that TwitterRepository method 'findById' was called correctly
+    verify(twitterRepository, times(1)).findById(same(searchId));
+  }
+
+  @Test
   @DisplayName("create should not throw any exception when successfully")
   void create_ShouldNotThrowAnyException_WhenCreatedSuccesfully() {
     // Arrange
     CreateTwitterDto dto = new CreateTwitterDto("Test Content");
 
-    twitterService.setUserDetails(userDetails);
-
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(user);
 
     // Act & Assert
     Assertions.assertThatNoException().isThrownBy(() -> twitterService.create(dto));
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called
+    // correctly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that the TwitterRepository method 'save' was called correctly
     verify(twitterRepository, times(1)).save(any(Twitter.class));
-  }
-
-  @Test
-  @DisplayName("create should throw InvalidCredentialsException when userDetails is not setted")
-  void create_ShouldThrowInvalidCredentialsException_WhenUserDetailsIsNotSetted() {
-    // Arrange
-    CreateTwitterDto dto = new CreateTwitterDto("Test Content");
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.create(dto))
-        .isInstanceOf(InvalidCredentialsException.class)
-        .hasMessage("User is not authenticated");
-
-    // Verify that the UserService method 'findByUsername' was not called
-    verify(userService, never()).findByUsername(anyString());
-
-    // Verify that the TwitterRepository method 'save' was not called
-    verify(twitterRepository, never()).save(any(Twitter.class));
   }
 
   @Test
@@ -158,8 +176,8 @@ class TwitterServiceTest {
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Content cannot be null or empty");
 
-    // Verify that the UserService method 'findByUsername' was not called
-    verify(userService, never()).findByUsername(anyString());
+    // Verify that the UserService method 'getAuthenticatedUser' was not called
+    verify(userService, never()).getAuthenticatedUser(same(userDetails));
 
     // Verify that the TwitterRepository method 'save' was not called
     verify(twitterRepository, never()).save(any(Twitter.class));
@@ -173,9 +191,8 @@ class TwitterServiceTest {
         Twitter.createNew("Twitter Content 1", user),
         Twitter.createNew("Twitter Content 2", user),
         Twitter.createNew("Twitter Content 3", user));
-    twitterService.setUserDetails(userDetails);
 
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(user);
     when(twitterRepository.findAllByAuthorId(same(user.getId()))).thenReturn(twitters);
 
     // Act
@@ -187,8 +204,8 @@ class TwitterServiceTest {
         .isNotEmpty()
         .hasSize(twitters.size());
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findAllByAuthorId' was called correctly
     verify(twitterRepository, times(1)).findAllByAuthorId(same(user.getId()));
@@ -197,10 +214,8 @@ class TwitterServiceTest {
   @Test
   @DisplayName("getUserTwitters should return empty twitter list when no twitters are found")
   void getUserTwitters_ShouldReturnEmptyTwitterList_WhenNoTwittersAreFound() {
-    // Arrange
-    twitterService.setUserDetails(userDetails);
 
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(user);
     when(twitterRepository.findAllByAuthorId(same(user.getId()))).thenReturn(List.of());
 
     // Act
@@ -211,27 +226,11 @@ class TwitterServiceTest {
         .isNotNull()
         .isEmpty();
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findAllByAuthorId' was called correctly
     verify(twitterRepository, times(1)).findAllByAuthorId(same(user.getId()));
-  }
-
-  @Test
-  @DisplayName("getUserTwitters should throw InvalidCredentialsException when userDetails is not setted")
-  void getUserTwitters_ShouldThrowInvalidCredentialsException_WhenUserDetailsIsNotSetted() {
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.getUserTwitters())
-        .isInstanceOf(InvalidCredentialsException.class)
-        .hasMessage("User is not authenticated");
-
-    // Verify that the UserService method 'findByUsername' was not called
-    verify(userService, never()).findByUsername(anyString());
-
-    // Verify that TwitterRepository method 'findAllByAuthorId' was not called
-    verify(twitterRepository, never()).findAllByAuthorId(any(UUID.class));
   }
 
   @Test
@@ -242,9 +241,7 @@ class TwitterServiceTest {
     publicTwitterFromRepository.setVisibility(TwitterVisibility.PUBLIC);
     Long searchId = publicTwitterFromRepository.getId();
 
-    twitterService.setUserDetails(userDetails);
-
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(user);
     when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(publicTwitterFromRepository));
 
     // Act
@@ -255,50 +252,11 @@ class TwitterServiceTest {
     Assertions.assertThat(singleTwitter.getId()).isEqualTo(publicTwitterFromRepository.getId());
     Assertions.assertThat(singleTwitter.getContent()).isEqualTo(publicTwitterFromRepository.getContent());
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was called correctly
     verify(twitterRepository, times(1)).findById(same(searchId));
-  }
-
-  @Test
-  @DisplayName("getSingleTwitter should throw NotFoundException when twitter is not found")
-  void getSingleTwitter_ShouldThrowNotFoundException_WhenTwitterIsNotFound() {
-    // Arrange
-    Long searchId = 1L;
-
-    twitterService.setUserDetails(userDetails);
-
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
-    when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(null));
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.getSingleTwitter(searchId))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Twitter not found");
-
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
-
-    // Verify that TwitterRepository method 'findById' was called correctly
-    verify(twitterRepository, times(1)).findById(same(searchId));
-  }
-
-  @Test
-  @DisplayName("getSingleTwitter should throw InvalidCredentialsException when userDetails is not setted")
-  void getSingleTwitter_ShouldThrowInvalidCredentialsException_WhenUserDetailsIsNotSetted() {
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.getSingleTwitter(1L))
-        .isInstanceOf(InvalidCredentialsException.class)
-        .hasMessage("User is not authenticated");
-
-    // Verify that the UserService method 'findByUsername' was not called
-    verify(userService, never()).findByUsername(anyString());
-
-    // Verify that TwitterRepository method 'findById' was not called
-    verify(twitterRepository, never()).findById(anyLong());
   }
 
   @Test
@@ -310,10 +268,8 @@ class TwitterServiceTest {
     privateTwitterFromRepository.setVisibility(TwitterVisibility.PRIVATE);
     Long searchId = privateTwitterFromRepository.getId();
 
-    twitterService.setUserDetails(userDetails);
-
     // Authentication done with different user than the private twitter subject
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(anotherUser);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(anotherUser);
     when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(privateTwitterFromRepository));
 
     // Act & Assert
@@ -321,8 +277,8 @@ class TwitterServiceTest {
         .isInstanceOf(PermissionDeniedException.class)
         .hasMessage("User does not have permission to view this twitter");
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was called correctly
     verify(twitterRepository, times(1)).findById(same(searchId));
@@ -337,59 +293,11 @@ class TwitterServiceTest {
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("UpdateTwitter object cannot be null");
 
-    // Verify that the UserService method 'findByUsername' was not called
-    verify(userService, never()).findByUsername(anyString());
+    // Verify that the UserService method 'getAuthenticatedUser' was not called
+    verify(userService, never()).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was not called
     verify(twitterRepository, never()).findById(anyLong());
-
-    // Verify that the TwitterRepository method 'save' was not called
-    verify(twitterRepository, never()).save(any(Twitter.class));
-  }
-
-  @Test
-  @DisplayName("update should throw InvalidCredentialsException when userDetails is not setted")
-  void update_ShouldThrowInvalidCredentialsException_WhenUserDetailsIsNotSetted() {
-    // Arrange
-    UpdateTwitterDto dto = new UpdateTwitterDto();
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.update(1L, dto))
-        .isInstanceOf(InvalidCredentialsException.class)
-        .hasMessage("User is not authenticated");
-
-    // Verify that the UserService method 'findByUsername' was not called
-    verify(userService, never()).findByUsername(anyString());
-
-    // Verify that TwitterRepository method 'findById' was not called
-    verify(twitterRepository, never()).findById(anyLong());
-
-    // Verify that the TwitterRepository method 'save' was not called
-    verify(twitterRepository, never()).save(any(Twitter.class));
-  }
-
-  @Test
-  @DisplayName("update should throw NotFoundException when twitter is not found")
-  void update_ShouldThrowNotFoundException_WhenTwitterIsNotFound() {
-    // Arrange
-    UpdateTwitterDto dto = new UpdateTwitterDto();
-    Long searchId = 1L;
-
-    twitterService.setUserDetails(userDetails);
-
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
-    when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(null));
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.update(searchId, dto))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Twitter not found");
-
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
-
-    // Verify that TwitterRepository method 'findById' was called correctly
-    verify(twitterRepository, times(1)).findById(same(searchId));
 
     // Verify that the TwitterRepository method 'save' was not called
     verify(twitterRepository, never()).save(any(Twitter.class));
@@ -404,10 +312,8 @@ class TwitterServiceTest {
     twitterFromRepository.setAuthor(user);
     Long searchId = twitterFromRepository.getId();
 
-    twitterService.setUserDetails(userDetails);
-
     // Authentication done with different user than the twitter subject
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(anotherUser);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(anotherUser);
     when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(twitterFromRepository));
 
     // Act & Assert
@@ -415,8 +321,8 @@ class TwitterServiceTest {
         .isInstanceOf(PermissionDeniedException.class)
         .hasMessage("User does not have permission to modify this twitter");
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was called correctly
     verify(twitterRepository, times(1)).findById(same(searchId));
@@ -441,14 +347,13 @@ class TwitterServiceTest {
     twitterFromRepository.setAuthor(user);
     Long searchId = twitterFromRepository.getId();
 
-    twitterService.setUserDetails(userDetails);
-
     // Authentication done with same user of the twitter subject
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(user);
     // Mock with return a copy of the defined twitterFromRepository to get a
     // different instance when modified inside the 'update' method
     when(twitterRepository.findById(same(searchId)))
         .thenReturn(Optional.ofNullable(getTwitterCopy(twitterFromRepository)));
+
     when(twitterRepository.save(any(Twitter.class)))
         .thenAnswer((invocation) -> invocation.getArguments()[0]);
 
@@ -460,13 +365,13 @@ class TwitterServiceTest {
     Assertions.assertThat(updatedTwitter.getVisibility()).isNotEqualTo(twitterFromRepository.getVisibility());
     Assertions.assertThat(updatedTwitter.getLikes()).isNotEqualTo(twitterFromRepository.getLikes());
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was called correctly
     verify(twitterRepository, times(1)).findById(same(searchId));
 
-    // Verify that the TwitterRepository method 'save' was not called
+    // Verify that the TwitterRepository method 'save' was called correctly
     verify(twitterRepository, times(1)).save(any(Twitter.class));
   }
 
@@ -481,9 +386,7 @@ class TwitterServiceTest {
     Twitter twitterFromRepository = getTwitterFromRepository();
     Long searchId = twitterFromRepository.getId();
 
-    twitterService.setUserDetails(userDetails);
-
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(user);
     when(twitterRepository.findById(same(searchId))).thenReturn(Optional.ofNullable(twitterFromRepository));
 
     // Act & Assert
@@ -491,61 +394,14 @@ class TwitterServiceTest {
         .isInstanceOf(InvalidArgumentException.class)
         .hasMessage("Visibility value is invalid. Only 'public' or 'private' is permitted");
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was called correctly
     verify(twitterRepository, times(1)).findById(same(searchId));
 
     // Verify that the TwitterRepository method 'save' was not called
     verify(twitterRepository, never()).save(any(Twitter.class));
-  }
-
-  @Test
-  @DisplayName("delete should throw InvalidCredentialsException when userDetails is not setted")
-  void delete_ShouldThrowInvalidCredentialsException_WhenUserDetailsIsNotSetted() {
-    // Arrange
-    Long deleteId = 1L;
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.delete(deleteId))
-        .isInstanceOf(InvalidCredentialsException.class)
-        .hasMessage("User is not authenticated");
-
-    // Verify that the UserService method 'findByUsername' was not called
-    verify(userService, never()).findByUsername(anyString());
-
-    // Verify that TwitterRepository method 'findById' was not called
-    verify(twitterRepository, never()).findById(anyLong());
-
-    // Verify that the TwitterRepository method 'deleteById' was not called
-    verify(twitterRepository, never()).deleteById(same(deleteId));
-  }
-
-  @Test
-  @DisplayName("delete should throw NotFoundException when twitter is not found")
-  void delete_ShouldThrowNotFoundException_WhenTwitterIsNotFound() {
-    // Arrange
-    Long deleteId = 1L;
-
-    twitterService.setUserDetails(userDetails);
-
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
-    when(twitterRepository.findById(same(deleteId))).thenReturn(Optional.ofNullable(null));
-
-    // Act & Assert
-    Assertions.assertThatThrownBy(() -> twitterService.delete(deleteId))
-        .isInstanceOf(NotFoundException.class)
-        .hasMessage("Twitter not found");
-
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
-
-    // Verify that TwitterRepository method 'findById' was called correctly
-    verify(twitterRepository, times(1)).findById(same(deleteId));
-
-    // Verify that the TwitterRepository method 'deleteById' was not called
-    verify(twitterRepository, never()).deleteById(same(deleteId));
   }
 
   @Test
@@ -556,10 +412,8 @@ class TwitterServiceTest {
     validTwitter.setAuthor(user);
     Long deleteId = validTwitter.getId();
 
-    twitterService.setUserDetails(userDetails);
-
     // Authentication done with different user than the twitter subject
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(anotherUser);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(anotherUser);
     when(twitterRepository.findById(same(deleteId))).thenReturn(Optional.ofNullable(validTwitter));
 
     // Act & Assert
@@ -567,8 +421,8 @@ class TwitterServiceTest {
         .isInstanceOf(PermissionDeniedException.class)
         .hasMessage("User does not have permission to modify this twitter");
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was called correctly
     verify(twitterRepository, times(1)).findById(same(deleteId));
@@ -588,19 +442,19 @@ class TwitterServiceTest {
     twitterService.setUserDetails(userDetails);
 
     // Authentication done with same user of the twitter subject
-    when(userService.findByUsername(same(userDetails.getUsername()))).thenReturn(user);
+    when(userService.getAuthenticatedUser(same(userDetails))).thenReturn(user);
     when(twitterRepository.findById(same(deleteId))).thenReturn(Optional.ofNullable(validTwitter));
 
     // Act & Assert
     Assertions.assertThatNoException().isThrownBy(() -> twitterService.delete(deleteId));
 
-    // Verify that the UserService method 'findByUsername' was called correctly
-    verify(userService, times(1)).findByUsername(same(userDetails.getUsername()));
+    // Verify that the UserService method 'getAuthenticatedUser' was called correcly
+    verify(userService, times(1)).getAuthenticatedUser(same(userDetails));
 
     // Verify that TwitterRepository method 'findById' was called correctly
     verify(twitterRepository, times(1)).findById(same(deleteId));
 
-    // Verify that the TwitterRepository method 'deleteById' was not called
+    // Verify that the TwitterRepository method 'deleteById' was called correctly
     verify(twitterRepository, times(1)).deleteById(same(deleteId));
   }
 }
